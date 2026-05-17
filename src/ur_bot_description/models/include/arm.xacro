@@ -42,7 +42,7 @@
       trajectory_port="50003"
       script_command_port="50004"
     >
-      <origin xyz="0 0 0" rpy="0 0 0"/>          <!-- position robot in the world -->
+      <origin xyz="0 0 0" rpy="0 0 0"/>
     </xacro:ur_robot>
 
   </xacro:macro>

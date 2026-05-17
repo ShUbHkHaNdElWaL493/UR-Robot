@@ -7,10 +7,13 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(Eigen3 REQUIRED)
+find_package(rclcpp REQUIRED)
 find_package(ur_rtde REQUIRED)
 
-add_executable(planner_spline src/planner_spline.cpp)
-target_link_libraries(planner_spline PRIVATE ur_rtde::rtde)
+add_executable(spline_planner src/spline_planner.cpp)
+target_link_libraries(spline_planner Eigen3::Eigen ur_rtde::rtde)
+ament_target_dependencies(spline_planner rclcpp)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

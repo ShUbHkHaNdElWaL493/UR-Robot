@@ -2,13 +2,12 @@
 <robot xmlns:xacro="http://wiki.ros.org/xacro" name="robot">
 
   <xacro:include filename="$(find ur_bot_description)/models/include/arm.xacro"/>
-  <xacro:include filename="$(find ur_bot_description)/models/include/tool.xacro"/>
 
   <!-- parameters -->
 
   <!-- possible 'mode' values: gz, hw -->
   <xacro:arg name="mode" default=""/>
-  <xacro:property name="mode" value="$(arg mode)" />
+  <xacro:property name="mode" value="$(arg mode)"/>
 
   <!-- possible 'ur_type' values: ur3, ur5, ur10, ur3e, ur5e, ur7e, ur10e, ur12e, ur16e, ur8long, ur15, ur18, ur20, ur30 -->
   <xacro:arg name="ur_type" default="urX"/>
@@ -23,11 +22,6 @@
     parent="world"
     robot_ip="$(arg robot_ip)"
     simulation_controllers="$(arg simulation_controllers)"
-  />
-
-  <xacro:tool_macro
-    mode="$(arg mode)"
-    parent="tool0"
   />
 
   <xacro:if value="${mode == 'gz'}">
