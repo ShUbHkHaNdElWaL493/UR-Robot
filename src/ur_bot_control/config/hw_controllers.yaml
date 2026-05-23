@@ -3,11 +3,14 @@ controller_manager:
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
+    speed_scaling_state_broadcaster:
+      type: ur_controllers/SpeedScalingStateBroadcaster
+
     io_and_status_controller:
       type: ur_controllers/GPIOController
 
-    speed_scaling_state_broadcaster:
-      type: ur_controllers/SpeedScalingStateBroadcaster
+    ur_configuration_controller:
+      type: ur_controllers/URConfigurationController
 
     force_torque_sensor_broadcaster:
       type: force_torque_sensor_broadcaster/ForceTorqueSensorBroadcaster
@@ -18,32 +21,29 @@ controller_manager:
     scaled_joint_trajectory_controller:
       type: ur_controllers/ScaledJointTrajectoryController
 
+    passthrough_trajectory_controller:
+      type: ur_controllers/PassthroughTrajectoryController
+
+    forward_position_controller:
+      type: position_controllers/JointGroupPositionController
+
     forward_velocity_controller:
       type: velocity_controllers/JointGroupVelocityController
 
     forward_effort_controller:
       type: effort_controllers/JointGroupEffortController
 
-    forward_position_controller:
-      type: position_controllers/JointGroupPositionController
-
     force_mode_controller:
       type: ur_controllers/ForceModeController
+
+    friction_model_controller:
+      type: ur_controllers/FrictionModelController
 
     freedrive_mode_controller:
       type: ur_controllers/FreedriveModeController
 
-    passthrough_trajectory_controller:
-      type: ur_controllers/PassthroughTrajectoryController
-
     tcp_pose_broadcaster:
       type: pose_broadcaster/PoseBroadcaster
-
-    passthrough_trajectory_controller:
-      type: ur_controllers/PassthroughTrajectoryController
-
-    ur_configuration_controller:
-      type: ur_controllers/URConfigurationController
 
     tool_contact_controller:
       type: ur_controllers/ToolContactController
@@ -64,6 +64,7 @@ ur_configuration_controller:
 force_torque_sensor_broadcaster:
   ros__parameters:
     sensor_name: tcp_fts_sensor
+    frame_id: tool0_controller
     state_interface_names:
       - force.x
       - force.y
@@ -71,9 +72,7 @@ force_torque_sensor_broadcaster:
       - torque.x
       - torque.y
       - torque.z
-    frame_id: tool0
     topic_name: ft_data
-
 
 joint_trajectory_controller:
   ros__parameters:
@@ -101,7 +100,6 @@ joint_trajectory_controller:
       wrist_1_joint: { trajectory: 0.2, goal: 0.1 }
       wrist_2_joint: { trajectory: 0.2, goal: 0.1 }
       wrist_3_joint: { trajectory: 0.2, goal: 0.1 }
-
 
 scaled_joint_trajectory_controller:
   ros__parameters:
@@ -146,6 +144,16 @@ passthrough_trajectory_controller:
       - velocity
     speed_scaling_interface_name: speed_scaling/speed_scaling_factor
 
+forward_position_controller:
+  ros__parameters:
+    joints:
+      - shoulder_pan_joint
+      - shoulder_lift_joint
+      - elbow_joint
+      - wrist_1_joint
+      - wrist_2_joint
+      - wrist_3_joint
+
 forward_velocity_controller:
   ros__parameters:
     joints:
@@ -168,17 +176,11 @@ forward_effort_controller:
       - wrist_3_joint
     interface_name: effort
 
-forward_position_controller:
-  ros__parameters:
-    joints:
-      - shoulder_pan_joint
-      - shoulder_lift_joint
-      - elbow_joint
-      - wrist_1_joint
-      - wrist_2_joint
-      - wrist_3_joint
-
 force_mode_controller:
+  ros__parameters:
+    tf_prefix: ""
+
+friction_model_controller:
   ros__parameters:
     tf_prefix: ""
 

@@ -3,7 +3,6 @@ from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, Opaq
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import EnvironmentVariable, LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
-from launch_ros.parameter_descriptions import ParameterFile
 from launch_ros.substitutions import FindPackageShare
 
 def launch_setup(context):
@@ -14,6 +13,7 @@ def launch_setup(context):
     rviz_config = LaunchConfiguration("rviz_config")
     world = LaunchConfiguration("world")
 
+    controllers_file = PathJoinSubstitution([FindPackageShare("ur_bot_control"), "config", f"{mode.perform(context)}_controllers.yaml"])
     nodes = []
 
     robot_state_publisher_node = IncludeLaunchDescription(
@@ -21,7 +21,7 @@ def launch_setup(context):
         launch_arguments = {
             "mode" : mode,
             "robot_ip" : robot_ip,
-            "controllers" : PathJoinSubstitution([FindPackageShare("ur_bot_control"), "config", f"{mode.perform(context)}_controllers.yaml"])
+            "controllers" : controllers_file
         }.items()
     )
     nodes.append(robot_state_publisher_node)
@@ -78,16 +78,15 @@ def launch_setup(context):
     if mode.perform(context) == "hw":
 
         control_node = Node(
-            package = "controller_manager",
-            executable = "ros2_control_node",
-            name = "controller_manager",
+            package="ur_robot_driver",
+            executable="ur_ros2_control_node",
             parameters = [
                 PathJoinSubstitution([
                     FindPackageShare("ur_bot_control"),
                     "config",
                     f"{EnvironmentVariable('UR_SERIES').perform(context)}_update_rate.yaml"
                 ]),
-                ParameterFile(PathJoinSubstitution([FindPackageShare("ur_bot_control"), "config", f"{mode.perform(context)}_controllers.yaml"]), allow_substs = True)
+                controllers_file
             ],
             remappings = [(
                 "~/robot_description", "/robot_description"
@@ -156,8 +155,9 @@ def launch_setup(context):
         active_controllers_spawner_node = Node(
             package = "controller_manager",
             executable = "spawner",
+            name = "active_controllers_spawner",
             arguments = [
-                "-c",
+                "--controller-manager",
                 "/controller_manager"
             ]
             + controllers_active
@@ -167,8 +167,9 @@ def launch_setup(context):
         inactive_controllers_spawner_node = Node(
             package = "controller_manager",
             executable = "spawner",
+            name = "inactive_controllers_spawner",
             arguments = [
-                "-c",
+                "--controller-manager",
                 "/controller_manager",
                 "--inactive"
             ]

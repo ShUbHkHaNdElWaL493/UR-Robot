@@ -15,6 +15,11 @@ add_executable(spline_planner src/spline_planner.cpp)
 target_link_libraries(spline_planner Eigen3::Eigen ur_rtde::rtde)
 ament_target_dependencies(spline_planner rclcpp)
 
+install(
+  TARGETS spline_planner
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights

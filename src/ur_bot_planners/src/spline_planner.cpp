@@ -17,16 +17,15 @@ class SplineGenerator
 
     protected:
 
-    int resolution;
     double epsilon;
     Eigen::Matrix4d basis_matrix;
     Eigen::MatrixXd t_pos, t_vel, t_acc, t_jrk;
+    size_t resolution;
 
-    Path interpolate(const Eigen::VectorXd& p0, const Eigen::VectorXd& p1, const Eigen::VectorXd& p2, const Eigen::VectorXd& p3)
+    Path interpolate(const Eigen::VectorXd& p0, const Eigen::VectorXd& p1, const Eigen::VectorXd& p2, const Eigen::VectorXd& p3) const
     {
 
-        int dim = p0.size();
-        Eigen::MatrixXd points(4, dim);
+        Eigen::MatrixXd points(4, p0.size());
         points.row(0) = p0;
         points.row(1) = p1;
         points.row(2) = p2;
@@ -45,8 +44,7 @@ class SplineGenerator
 
     public:
 
-    SplineGenerator(const Eigen::Matrix4d& basis_matrix, int resolution, double epsilon) :
-    basis_matrix(basis_matrix), resolution(resolution), epsilon(epsilon)
+    SplineGenerator(const Eigen::Matrix4d& basis_matrix, size_t resolution, double epsilon) : epsilon(epsilon), basis_matrix(basis_matrix), resolution(resolution)
     {
         
         t_pos.resize(resolution, 4);
@@ -54,7 +52,7 @@ class SplineGenerator
         t_acc.resize(resolution, 4);
         t_jrk.resize(resolution, 4);
 
-        for (int i = 0; i < resolution; ++i)
+        for (size_t i = 0; i < resolution; ++i)
         {
             double t = (resolution > 1) ? static_cast<double>(i) / (resolution - 1) : 0.0;
             double t2 = t * t;
@@ -67,33 +65,40 @@ class SplineGenerator
     
     }
 
-    Path get_path(const std::vector<Eigen::VectorXd>& waypoints)
+    Path get_path(const Eigen::MatrixXd& waypoints) const
     {
-
-        if (waypoints.empty())
+        
+        if (waypoints.rows() == 0)
         {
             return {};
         }
 
         std::vector<Eigen::VectorXd> clean_waypoints;
-        clean_waypoints.reserve(waypoints.size() + 2);
-        clean_waypoints.push_back(waypoints[0]);
-        clean_waypoints.push_back(waypoints[0]);
-        for (size_t i = 1; i < waypoints.size(); ++i)
+        clean_waypoints.reserve(waypoints.rows() + 2);
+        
+        // In Eigen, .row(i) returns a row vector (1xD). 
+        // We use .transpose() to cast it to a column vector (Eigen::VectorXd) for your interpolate function.
+        clean_waypoints.push_back(waypoints.row(0).transpose());
+        clean_waypoints.push_back(waypoints.row(0).transpose());
+        
+        for (int i = 1; i < waypoints.rows(); ++i)
         {
-            if ((waypoints[i] - waypoints[i - 1]).norm() > epsilon)
+            // Calculate the norm of the difference between consecutive rows
+            if ((waypoints.row(i) - waypoints.row(i - 1)).norm() > epsilon)
             {
-                clean_waypoints.push_back(waypoints[i]);
+                clean_waypoints.push_back(waypoints.row(i).transpose());
             }
         }
         clean_waypoints.push_back(clean_waypoints.back());
-        int num_segments = clean_waypoints.size() - 3;
+        
+        int num_segments = (int) clean_waypoints.size() - 3;
         if (num_segments <= 0)
         {
             return {};
         }
 
-        int dim = waypoints[0].size();
+        size_t dim = waypoints.cols();
+        
         Path path;
         path.pos.resize(num_segments * resolution, dim);
         path.vel.resize(num_segments * resolution, dim);
@@ -102,12 +107,13 @@ class SplineGenerator
 
         for (int i = 0; i < num_segments; ++i)
         {
-            Path res = interpolate(
-                clean_waypoints[i], 
-                clean_waypoints[i + 1], 
-                clean_waypoints[i + 2], 
+            Path res = this->interpolate(
+                clean_waypoints[i],
+                clean_waypoints[i + 1],
+                clean_waypoints[i + 2],
                 clean_waypoints[i + 3]
             );
+            
             int row_start = i * resolution;
             path.pos.block(row_start, 0, resolution, dim) = res.pos;
             path.vel.block(row_start, 0, resolution, dim) = res.vel;
@@ -170,9 +176,12 @@ class SplinePlanner : public rclcpp::Node
 
     private:
 
+    CatmullRomSplineGenerator crsg;
+    BSplineGenerator bsg;
+
     public:
 
-    SplinePlanner() : Node("planner_node")
+    SplinePlanner(int resolution, double epsilon) : Node("planner_node"), crsg(resolution, epsilon), bsg(resolution, epsilon)
     {}
 
 };
@@ -284,4 +293,7 @@ class SplinePlanner : public rclcpp::Node
 
 int main()
 {
+
+    return 0;
+
 }
