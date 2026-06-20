@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://wiki.ros.org/xacro" name="robot">
 
-  <xacro:include filename="$(find ur_bot_description)/models/include/arm.xacro"/>
+  <xacro:include filename="$(find ur_description)/urdf/ur_macro.xacro"/>
 
   <!-- parameters -->
 
@@ -16,17 +16,48 @@
   
   <link name="world"/>
 
-  <xacro:arm_macro
-    mode="$(arg mode)"
-    ur_type="$(arg ur_type)"
-    parent="world"
-    robot_ip="$(arg robot_ip)"
-    simulation_controllers="$(arg simulation_controllers)"
-  />
+  <xacro:ur_robot
+      name="ur"
+      tf_prefix=""
+      parent="world"
+      joint_limits_parameters_file="$(find ur_description)/config/$(arg ur_type)/joint_limits.yaml"
+      kinematics_parameters_file="$(find ur_description)/config/$(arg ur_type)/default_kinematics.yaml"
+      physical_parameters_file="$(find ur_description)/config/$(arg ur_type)/physical_parameters.yaml"
+      visual_parameters_file="$(find ur_description)/config/$(arg ur_type)/visual_parameters.yaml"
+      transmission_hw_interface=""
+      safety_limits="true"
+      safety_pos_margin="0.15"
+      safety_k_position="20"
+      use_fake_hardware="false"
+      fake_sensor_commands="false"
+      sim_gazebo="false"
+      sim_ignition="${mode == 'gz'}"
+      headless_mode="true"
+      initial_positions="${dict(shoulder_pan_joint=0.0,shoulder_lift_joint=-1.57,elbow_joint=0.0,wrist_1_joint=-1.57,wrist_2_joint=0.0,wrist_3_joint=0.0)}"
+      use_tool_communication="false"
+      tool_voltage="0"
+      tool_parity="0"
+      tool_baud_rate="115200"
+      tool_stop_bits="1"
+      tool_rx_idle_chars="1.5"
+      tool_tx_idle_chars="3.5"
+      tool_device_name="/tmp/ttyUR"
+      tool_tcp_port="54321"
+      robot_ip="$(arg robot_ip)"
+      script_filename="$(find ur_robot_driver)/resources/ros_control.urscript"
+      output_recipe_filename="$(find ur_robot_driver)/resources/rtde_output_recipe.txt"
+      input_recipe_filename="$(find ur_robot_driver)/resources/rtde_input_recipe.txt"
+      reverse_ip="0.0.0.0"
+      reverse_port="50001"
+      script_sender_port="50002"
+      trajectory_port="50003"
+      script_command_port="50004"
+    >
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </xacro:ur_robot>
 
   <xacro:if value="${mode == 'gz'}">
-    <gazebo reference="world">
-    </gazebo>
+    <gazebo reference="world"></gazebo>
     <gazebo>
       <plugin filename="libign_ros2_control-system.so" name="ign_ros2_control::IgnitionROS2ControlPlugin">
         <parameters>$(arg simulation_controllers)</parameters>
