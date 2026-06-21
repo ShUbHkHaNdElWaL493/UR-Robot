@@ -27,6 +27,8 @@ services:
     environment:
       - ROBOT_MODEL=${UR_MODEL}
   ur_bot:
+    build:
+      context: .
     image: ur_bot
     container_name: ur_bot
     networks:
